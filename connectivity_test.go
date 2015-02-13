@@ -1,9 +1,103 @@
 package connectivity
 
 import (
+	"bufio"
+	"log"
+	"net/http"
 	"sort"
+	"strconv"
 	"testing"
 )
+
+// download test data from internet
+const (
+	tiny   string = "http://algs4.cs.princeton.edu/15uf/tinyUF.txt"
+	medium string = "http://algs4.cs.princeton.edu/15uf/mediumUF.txt"
+	// huge   string = "http://algs4.cs.princeton.edu/15uf/largeUF.txt"
+)
+
+func loadTestDataFromWeb() []TestData {
+	cl := &http.Client{}
+	tr, err := cl.Get(tiny)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	mr, err := cl.Get(medium)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	// hr, err := cl.Get(huge)
+	// if err != nil {
+	// 	log.Fatalln(err)
+	// }
+
+	c := make(chan TestData)
+	// go func() { c <- parse(hr) }()
+	go func() { c <- parse(mr) }()
+	go func() { c <- parse(tr) }()
+
+	var results []TestData
+	for i := 0; i < 2; /*3*/ i++ {
+		result := <-c
+		results = append(results, result)
+	}
+	return results
+}
+
+func parse(r *http.Response) (result TestData) {
+	defer r.Body.Close()
+
+	s := bufio.NewScanner(r.Body)
+	s.Split(bufio.ScanWords)
+	var pairs []Pair
+	s.Scan()
+	g, err := strconv.Atoi(s.Text())
+	if err != nil {
+		log.Panicf("first generator parse error %v", g, err)
+	}
+	for s.Scan() {
+		var pair Pair
+		pair.Left, err = strconv.Atoi(s.Text())
+		if err != nil {
+			log.Fatalf("parse left %v failed", pair.Left, err)
+		}
+		s.Scan()
+		pair.Right, err = strconv.Atoi(s.Text())
+		if err != nil {
+			log.Fatalf("parse right %v failed", pair.Right, err)
+		}
+		pairs = append(pairs, pair)
+	}
+
+	result.Generator = g
+	result.Pairs = pairs
+	return result
+}
+
+type Pair struct {
+	Left  int
+	Right int
+}
+
+type TestData struct {
+	Generator int
+	Pairs     []Pair
+}
+
+func TestJustTest(t *testing.T) {
+	n := loadTestDataFromWeb()
+	for _, content := range n {
+		log.Printf("Generator %v has %v pairs", content.Generator, len(content.Pairs))
+		test := NewConnectivity(content.Generator)
+		for idx, p := range content.Pairs {
+			// log.Printf("%vth pair: %v and %v", idx, p.Left, p.Right)
+			test.Union(p.Left, p.Right)
+			if !test.FindQuery(p.Left, p.Right) {
+				t.Errorf("%v and %v are expected to be in the same component, this is the %vth union operation", p.Left, p.Right, idx)
+			}
+		}
+	}
+}
 
 // test set is a struct of set/bag of items, plus
 // the test subject -> 2 items
