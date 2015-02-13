@@ -75,6 +75,10 @@ func (c *Components) Union(a, b int) {
 	*c = (*c)[:len(*c)-1]
 }
 
+//////////////////////////////////////////////////////////
+//  Improved UnionFind with weight and compression
+//////////////////////////////////////////////////////////
+
 // in order to calculate weight of the tree we maintain
 // a second array storing the size of the tree at idx
 type WeightedCompressed struct {
