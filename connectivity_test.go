@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strconv"
 	"testing"
+	"time"
 )
 
 // download test data from internet
@@ -85,17 +86,21 @@ type TestData struct {
 }
 
 func TestJustTest(t *testing.T) {
+	loadStart := time.Now()
 	n := loadTestDataFromWeb()
+	log.Printf("loading used %v", time.Since(loadStart))
 	for _, content := range n {
 		log.Printf("Generator %v has %v pairs", content.Generator, len(content.Pairs))
-		test := NewConnectivity(content.Generator)
+		algoStart := time.Now()
+		test := NewWeightedCompression(content.Generator)
 		for idx, p := range content.Pairs {
 			// log.Printf("%vth pair: %v and %v", idx, p.Left, p.Right)
 			test.Union(p.Left, p.Right)
-			if !test.FindQuery(p.Left, p.Right) {
+			if !test.Find(p.Left, p.Right) {
 				t.Errorf("%v and %v are expected to be in the same component, this is the %vth union operation", p.Left, p.Right, idx)
 			}
 		}
+		log.Printf("Weighted Compressed UnionFind used %v", time.Since(algoStart))
 	}
 }
 
