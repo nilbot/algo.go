@@ -112,6 +112,7 @@ func (w *WeightedCompressed) Find(a, b int) bool {
 
 func (w *WeightedCompressed) root(pos int) int {
 	for pos != w.parent[pos] {
+		// path compression
 		w.parent[pos] = w.parent[w.parent[pos]]
 		pos = w.parent[pos]
 	}
