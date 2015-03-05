@@ -14,38 +14,39 @@ import (
 const (
 	tiny   string = "http://algs4.cs.princeton.edu/15uf/tinyUF.txt"
 	medium string = "http://algs4.cs.princeton.edu/15uf/mediumUF.txt"
-	// huge   string = "http://algs4.cs.princeton.edu/15uf/largeUF.txt"
+	huge   string = "http://algs4.cs.princeton.edu/15uf/largeUF.txt"
 )
 
 func loadTestDataFromWeb() []TestData {
-	cl := &http.Client{}
-	tr, err := cl.Get(tiny)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	mr, err := cl.Get(medium)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	// hr, err := cl.Get(huge)
-	// if err != nil {
-	// 	log.Fatalln(err)
-	// }
 
 	c := make(chan TestData)
-	// go func() { c <- parse(hr) }()
-	go func() { c <- parse(mr) }()
-	go func() { c <- parse(tr) }()
+	go func() { c <- parse(tiny) }()
+	go func() { c <- parse(medium) }()
+	go func() { c <- parse(huge) }()
 
 	var results []TestData
-	for i := 0; i < 2; /*3*/ i++ {
-		result := <-c
-		results = append(results, result)
+	timeout := time.After(1 * time.Second)
+	for i := 0; i < 3; i++ {
+		select {
+		case result := <-c:
+			results = append(results, result)
+		case <-timeout:
+			log.Println("timed out fetching data")
+			return results
+		}
+
 	}
 	return results
 }
 
-func parse(r *http.Response) (result TestData) {
+func parse(url string) (result TestData) {
+
+	cl := &http.Client{}
+	r, err := cl.Get(url)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
 	defer r.Body.Close()
 
 	s := bufio.NewScanner(r.Body)
