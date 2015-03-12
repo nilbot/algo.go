@@ -54,18 +54,18 @@ func parse(url string) (result TestData) {
 	s.Scan()
 	g, err := strconv.Atoi(s.Text())
 	if err != nil {
-		log.Panicf("first generator parse error %v", g, err)
+		log.Panicf("first generator parse %v failed, error %v", s.Text(), err)
 	}
 	for s.Scan() {
 		var pair Pair
 		pair.Left, err = strconv.Atoi(s.Text())
 		if err != nil {
-			log.Fatalf("parse left %v failed", pair.Left, err)
+			log.Fatalf("parse left %v failed, error %v", s.Text(), err)
 		}
 		s.Scan()
 		pair.Right, err = strconv.Atoi(s.Text())
 		if err != nil {
-			log.Fatalf("parse right %v failed", pair.Right, err)
+			log.Fatalf("parse right %v failed, error %v", s.Text(), err)
 		}
 		pairs = append(pairs, pair)
 	}
