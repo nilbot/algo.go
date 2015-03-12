@@ -18,10 +18,12 @@ type Simulator interface {
 	// return the used steps to produce a percolation
 	Simulate() int64
 
+	// mark the index n as open. search for neighbours,
+	// union with those who are also open.
 	mark(n int)
 
-	// clear states of the last simulation, init all values
-	// size and length of the map stays the same
+	// clear states of the last simulation, init all values.
+	// size of the grid and side length stay the same
 	Clear()
 }
 
